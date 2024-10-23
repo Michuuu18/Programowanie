@@ -1,0 +1,139 @@
+using System;
+using System.Linq;
+ 
+namespace MNLAB_4
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            uint size = PobierzRozmiarMacierzy();
+            var matrix = PobierzMacierz(size);
+            var result = GaussianElimination(size, matrix);
+            
+            if (result == null)
+            {
+                Console.WriteLine("\nMacierz osobliwa, brak rozwiązania!");
+            }
+            else
+            {
+                WyswietlRozwiazanie(size, result);
+            }
+        }
+ 
+        static uint PobierzRozmiarMacierzy()
+        {
+            Console.WriteLine("Wprowadź rozmiar macierzy kwadratowej (n):");
+            var input = Console.ReadLine();
+ 
+            if (!uint.TryParse(input, out var size))
+            {
+                Console.WriteLine("Błędny rozmiar macierzy!");
+                throw new Exception("Nieprawidłowy rozmiar.");
+            }
+ 
+            return size;
+        }
+ 
+        static double[,] PobierzMacierz(uint size)
+        {
+            Console.WriteLine("\nPodaj kolejne wiersze macierzy (liczby oddzielone spacją):");
+            Console.WriteLine("Ostatnia liczba w każdym wierszu to wartość uzupełniająca (wyraz wolny).");
+ 
+            var matrix = new double[size, size + 1];
+ 
+            for (var i = 0; i < size; i++)
+            {
+                Console.WriteLine($"Wiersz {i + 1}:");
+                var rowInput = Console.ReadLine();
+                
+                if (rowInput == null)
+                {
+                    Console.WriteLine("Błąd: nieprawidłowy wiersz macierzy!");
+                    throw new Exception("Nieprawidłowy wiersz.");
+                }
+ 
+                var rowValues = rowInput.Split(' ').ToArray();
+                if (rowValues.Length != size + 1)
+                {
+                    Console.WriteLine("Błędna liczba elementów w wierszu!");
+                    throw new Exception("Nieprawidłowa liczba elementów.");
+                }
+ 
+                for (var j = 0; j < size + 1; j++)
+                {
+                    if (!double.TryParse(rowValues[j], out var value))
+                    {
+                        Console.WriteLine("Błędna wartość w wierszu!");
+                        throw new Exception("Nieprawidłowa wartość.");
+                    }
+                    matrix[i, j] = value;
+                }
+            }
+ 
+            return matrix;
+        }
+ 
+        static double[,] GaussianElimination(uint size, double[,] matrix)
+        {
+            for (var k = 0; k < size; k++)
+            {
+                var maxElement = matrix[k, k];
+                var maxRow = k;
+ 
+                for (var i = k + 1; i < size; i++)
+                {
+                    if (Math.Abs(matrix[i, k]) > Math.Abs(maxElement))
+                    {
+                        maxElement = matrix[i, k];
+                        maxRow = i;
+                    }
+                }
+ 
+                if (maxElement == 0)
+                    return null;
+ 
+                ZamienWiersze(k, maxRow, size, matrix);
+ 
+                for (var j = k; j <= size; j++)
+                {
+                    matrix[k, j] /= maxElement;
+                }
+ 
+                for (var i = 0; i < size; i++)
+                {
+                    if (i != k)
+                    {
+                        var factor = matrix[i, k];
+                        for (var j = k; j <= size; j++)
+                        {
+                            matrix[i, j] -= factor * matrix[k, j];
+                        }
+                    }
+                }
+            }
+ 
+            return matrix;
+        }
+ 
+        static void ZamienWiersze(int row1, int row2, uint size, double[,] matrix)
+        {
+            for (var j = 0; j <= size; j++)
+            {
+                var temp = matrix[row1, j];
+                matrix[row1, j] = matrix[row2, j];
+                matrix[row2, j] = temp;
+            }
+        }
+ 
+        static void WyswietlRozwiazanie(uint size, double[,] matrix)
+        {
+            Console.WriteLine("\nWynik x = [");
+            for (var i = 0; i < size; i++)
+            {
+                Console.WriteLine($"x{i + 1} = {Math.Round(matrix[i, size], 3)}");
+            }
+            Console.WriteLine("]");
+        }
+    }
+}
